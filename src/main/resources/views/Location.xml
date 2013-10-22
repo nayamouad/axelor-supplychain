@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<object-views xmlns="http://apps.axelor.com/xml/ns/object-views"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://apps.axelor.com/xml/ns/object-views http://apps.axelor.com/xml/ns/object-views/object-views_0.9.xsd">
+    
+    <grid name="location-grid" title="Stock Locations" model="com.axelor.apps.supplychain.db.Location">
+        <field name="name"/>
+        <field name="parent"/>
+        <field name="company"/>
+        <field name="partner"/>
+        <field name="typeSelect"/>
+        <field name="isDefaultLocation"/>
+    </grid>
+    
+    <form name="location-form" title="Stock Location" model="com.axelor.apps.supplychain.db.Location" cols="6"
+    	onNew="action-location-record-new">
+    	<toolbar>
+    		<button name="createInventory" title="Create inventory" onClick="action-location-view-create-inventory" colSpan="1"/>
+    	</toolbar>
+        <field name="name"/>
+        <field name="parent"/>        
+        <field name="typeSelect" onChange="action-location-is-default-location"/>
+        <field name="company" widget="SuggestBox" onChange="action-location-is-default-location"/>
+        <field name="partner" domain="self.isContact = false" form-view="partner-form" grid-view="partner-grid"/>
+        <field name="isDefaultLocation" onChange="action-location-is-default-location"/>
+        <break/>
+        <spacer/>
+        <break/>
+        <button name="viewContent" title="View location content" colSpan="6"/>
+        <break/>
+        <spacer/>
+        <break/>
+        <notebook title="Location Lines" colSpan="6">
+        	<page title="Stock">
+        		<field name="locationLineList" colSpan="6" grid-view="location-line-grid" form-view="location-line-form"/>
+        	</page>
+        	<page title="Stock Details">
+        		<field name="detailsLocationLineList" colSpan="6" grid-view="location-line-details-grid" form-view="location-line-details-form"/>
+        	</page>
+        </notebook>
+    </form>
+    
+    <action-record name="action-location-record-new" model="com.axelor.apps.supplychain.db.Location">
+	    <field name="typeSelect" expr="1"/>
+	</action-record>
+    
+    <action-method name="action-location-is-default-location">
+   		<call class="com.axelor.apps.supplychain.web.LocationController" method="checkIsDefaultLocation"/>
+	</action-method>
+	
+    <action-view name="action-location-view-create-inventory" title="Create inventory" model="com.axelor.apps.base.db.Wizard">
+		<view type="form" name="create-inventory-wizard-form"/>
+		<context name="_location" expr="eval: __self__"/>
+	</action-view>
+
+</object-views>

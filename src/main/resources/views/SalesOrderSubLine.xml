@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<object-views xmlns="http://apps.axelor.com/xml/ns/object-views"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://apps.axelor.com/xml/ns/object-views http://apps.axelor.com/xml/ns/object-views/object-views_0.9.xsd">
+    
+    <grid name="sales-order-sub-line-grid" title="SO sublines" model="com.axelor.apps.supplychain.db.SalesOrderSubLine" orderBy="sequence">
+        <field name="sequence"/>
+        <field name="product"/>
+        <field name="employee"/>
+    	<field name="description"/>
+    	<field name="unit"/>
+		<field name="qty"/>    	
+		<field name="price"/>
+		<field name="vatLine.vat"/>
+		<field name="exTaxTotal"/>
+    </grid>
+    
+    <form name="sales-order-sub-line-form" title="SO subline" model="com.axelor.apps.supplychain.db.SalesOrderSubLine" cols="4" 
+    onNew="action-sales-order-sub-line-record-new,action-sales-order-sub-line-record-sequence,action-sales-order-sub-line-attrs-hide-product-variant"
+    onLoad="action-sales-order-sub-line-attrs-hide-product-variant">
+    	<field name="sequence"/>
+    	<field name="product" domain="self.endDate = null or self.endDate &gt; :__date__" onChange="action-sales-order-sub-line-method-get-product-information,action-sales-order-sub-line-method-compute,action-sales-order-sub-line-record-product-variant,action-sales-order-sub-line-attrs-hide-product-variant"/>
+    	<field name="productName"/>
+    	<field name="employee"/>
+    	<field name="description" colSpan="4"/>
+		<field name="qty" onChange="action-sales-order-sub-line-method-compute"/>    	
+		<field name="unit"/>
+		<field name="price" onChange="action-sales-order-sub-line-method-compute"/>
+		<field name="vatLine" domain="self.endDate = null or self.endDate &gt; :__date__"/>
+		<field name="exTaxTotal"/>
+		<field name="vatLine.value"/>
+		<group name="discount" title="Discount" colSpan="4" cols="4" canCollapse="true">
+	        <field name="discountTypeSelect" onChange="action-sales-order-sub-line-method-compute"/>
+	        <field name="discountAmount" onChange="action-sales-order-sub-line-method-compute"/>
+	    </group>
+        <field name="productVariant" widget="NestedEditor" summary-view="true" colSpan="4" form-view="product-variant-form" edit-window="self" canSelect="false" showTitle="false" hidden="true"/>
+    </form>
+    
+    <action-record name="action-sales-order-sub-line-record-new" model="com.axelor.apps.supplychain.db.SalesOrderSubLine">
+    	<field name="qty" expr="eval: 1"/>
+    </action-record>
+    
+    <action-record name="action-sales-order-sub-line-record-sequence" model="com.axelor.apps.supplychain.db.SalesOrderSubLine">
+    	<field name="sequence" expr="1" if="eval: _parent?.salesOrderSubLineList == null"/>
+    	<field name="sequence" expr="eval: _parent?.salesOrderSubLineList.size()+1" if="eval: _parent?.salesOrderSubLineList != null"/>
+    </action-record>
+    
+    <action-record name="action-sales-order-sub-line-record-product-variant" model="com.axelor.apps.supplychain.db.SalesOrderSubLine">
+    	<field name="productVariant" expr="action:action-product-variant-record-on-new" if="product?.productVariantConfiguration != null"/>
+    </action-record>
+    
+    <!-- ACTION METHOD -->
+	<action-method name="action-sales-order-sub-line-method-compute">
+		<call class="com.axelor.apps.supplychain.web.SalesOrderSubLineController" method="compute"/>
+	</action-method>
+	
+	<action-method name="action-sales-order-sub-line-method-get-product-information">
+		<call class="com.axelor.apps.supplychain.web.SalesOrderSubLineController" method="getProductInformation"/>
+	</action-method>
+	
+	
+	<!-- ACTION ATTRS -->
+	<action-attrs name="action-sales-order-sub-line-attrs-hide-product-variant">
+    	<attribute name="hidden" for="productVariant" expr="eval: product?.productVariantConfiguration == null"/>
+    </action-attrs>
+    
+</object-views>

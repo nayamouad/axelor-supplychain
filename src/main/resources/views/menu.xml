@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<object-views xmlns="http://apps.axelor.com/xml/ns/object-views"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://apps.axelor.com/xml/ns/object-views http://apps.axelor.com/xml/ns/object-views/object-views_0.9.xsd">
+	
+	<menuitem name="stock-root" title="Stock management"  priority="85"
+	icon="img/icons/baggage-cart-box.png" groups="admins,erp"/>
+		
+	<menuitem name="stock-root-custdeliveries" parent="stock-root"
+		title="Customer Deliveries" action="stock.root.custdeliveries" />
+
+	<action-view name="stock.root.custdeliveries" title="Customer Deliveries"
+		model="com.axelor.apps.supplychain.db.StockMove" icon="img/icons/product_small.png">
+		<view type="grid" />
+		<view type="form" />
+		<view-param name="search-filters" value="customer-deliveries-filters"/>
+		<domain>self.toLocation.typeSelect = 2</domain>
+		<context name="_typeSelect" expr="2"/>
+	</action-view>
+					
+	<menuitem name="stock-root-suparrivals" parent="stock-root"
+		title="Supplier Arrivals" action="stock.root.suparrivals" />
+
+	<action-view name="stock.root.suparrivals" title="Supplier Arrivals"
+		model="com.axelor.apps.supplychain.db.StockMove" icon="img/icons/product_small.png">
+		<view type="grid" />
+		<view type="form" />
+		<view-param name="search-filters" value="supplier-arrivals-filters"/>
+		<domain>self.fromLocation.typeSelect = 2</domain>
+		<context name="_typeSelect" expr="2"/>
+		<context name="_newDate" expr="eval: __date__.plusWeeks(1)"/>
+	</action-view>	
+	
+			
+	<menuitem name="stock-root-internal" parent="stock-root"
+		title="Internal Stock Moves" action="stock.root.internal" />
+
+	<action-view name="stock.root.internal" title="Internal Stock Moves"
+		model="com.axelor.apps.supplychain.db.StockMove" icon="img/icons/product_small.png">
+		<view type="grid" />
+		<view type="form" />
+		<view-param name="search-filters" value="internal-stock-move-filters"/>
+		<domain>self.fromLocation.typeSelect = 1 OR self.toLocation.typeSelect = 1</domain>
+		<context name="_typeSelect" expr="1"/>
+	</action-view>		
+		
+		
+	<menuitem name="stock-root-inventories" parent="stock-root"
+		title="Periodical processing"/>		
+		
+	<menuitem name="stock-root-inventories-draft" parent="stock-root-inventories"
+		title="Inventories" action="stock.root.inventories.draft" icon="img/icons/inventory.png"/>
+	
+	<action-view name="stock.root.inventories.draft" title="Inventories"
+		model="com.axelor.apps.supplychain.db.Inventory" icon="img/icons/inventory.png">
+		<view type="grid" />
+		<view type="form" />
+		<view-param name="search-filters" value="inventories-filters"/>
+	</action-view>
+	
+		
+	<menuitem name="stock-root-conf" parent="stock-root" title="Configuration"
+		icon="img/icons/parameter.png" />
+		
+	<menuitem name="stock-root-location" parent="stock-root-conf"
+		title="Stock Locations" action="stock.root.location" />
+	
+	<action-view name="stock.root.location" title="Stock Locations"
+		model="com.axelor.apps.supplychain.db.Location" icon="img/icons/baggage-cart-box.png">
+		<view type="grid" />
+		<view type="form" />
+	</action-view>
+	
+	<menuitem name="stock-root-conf-min-stock-rules" parent="stock-root-conf"
+		title="Minimum stock rules" action="stock.root.conf.min.Stock.rules" />
+	
+	<action-view name="stock.root.conf.min.Stock.rules" title="Minimum stock rules"
+		model="com.axelor.apps.supplychain.db.MinStockRules" icon="img/icons/baggage-cart-box.png">
+		<view type="grid" />
+		<view type="form" />
+	</action-view>
+	
+	<menuitem name="sc-root-sales" title="Sales" priority="150"
+		icon="img/icons/order.png" groups="admins,erp"/>
+			
+	<menuitem name="sc-root-sales-new-so" title="New Sale order" priority="2"
+		 groups="admins,erp" action="sc.root.sales.new.so" parent="sc-root-sales"/>
+		
+	<action-view name="sc.root.sales.new.so" title="New Sale order"
+		model="com.axelor.apps.supplychain.db.SalesOrder" icon="img/icons/order_small.png">
+		<view type="form" name="sales-order-form"/>
+		<view type="grid" name="sales-order-grid"/>
+		<view-param name="search-filters" value="sales-order-filters"/>
+		<context name="_internalUser" expr="eval: __user__.id"/>
+		<context name="_myActiveTeam" expr="call:com.axelor.apps.base.service.user.UserInfoService:getUserActiveTeam()"/>
+	</action-view>	
+	
+	<menuitem name="sc-root-sales-orders" parent="sc-root-sales" priority="1"
+		groups="admins,erp" title="Sale orders" action="sc.root.sales.orders" />
+	
+	<action-view name="sc.root.sales.orders" title="Sale orders"
+		model="com.axelor.apps.supplychain.db.SalesOrder" icon="img/icons/order_small.png">
+		<view type="grid" name="sales-order-grid" />
+		<view type="form" name="sales-order-form" />
+		<view-param name="search-filters" value="sales-order-filters"/>
+		<context name="_internalUser" expr="eval: __user__.id"/>
+		<context name="_myActiveTeam" expr="call:com.axelor.apps.base.service.user.UserInfoService:getUserActiveTeam()"/>
+	</action-view>	
+	
+	
+	<menuitem name="sc-root-purchases" title="Purchases" priority="150"
+		icon="img/icons/order.png" groups="admins,erp"/>
+		
+	<menuitem name="sc-root-purchase-order-new" title="New Purchase order" priority="2"
+		groups="admins,erp" action="sc.root.purchase.order.new" parent="sc-root-purchases"/>
+		
+	<action-view name="sc.root.purchase.order.new" title="New Purchase order"
+		model="com.axelor.apps.supplychain.db.PurchaseOrder" icon="img/icons/order_small.png">
+		<view type="form" name="purchase-order-form" />
+		<view type="grid" name="purchase-order-grid" />
+	</action-view>	
+	
+	<menuitem name="sc-root-purchase-orders" title="Purchase orders" priority="1" 
+		groups="admins,erp" action="sc.root.purchase.orders" parent="sc-root-purchases"/>
+
+	<action-view name="sc.root.purchase.orders" title="Purchase orders"
+		model="com.axelor.apps.supplychain.db.PurchaseOrder" icon="img/icons/order_small.png">
+		<view type="grid" name="purchase-order-grid" />
+		<view type="form" name="purchase-order-form" />
+		<view-param name="search-filters" value="purchases-order-filters"/>
+		<context name="_internalUser" expr="eval: __user__.id"/>
+	</action-view>
+
+	<menuitem name="top-menu-create-so" parent="top-menu-utility" title="Create SO" action="supply.chain.root.sales.order" />
+	
+	<action-view name="supply.chain.root.sales.order" title="Sales order"
+		model="com.axelor.apps.supplychain.db.SalesOrder" >
+		<view type="form" name="sales-order-form" />
+		<view type="grid" name="sales-order-grid" />
+	</action-view>	
+	
+
+	<menuitem name="top-sales" title="Sales" groups="admins,erp" top="true" left="false"/>
+	
+	<menuitem name="top-sales-offers" title="Quotes" action="top.sales.offers" parent="top-sales" groups="admins,erp" top="true" left="false"/>
+	<action-view name="top.sales.offers" title="Quotes"
+		model="com.axelor.apps.supplychain.db.SalesOrder" >
+		<view type="grid" name="sales-order-grid" />
+		<view type="form" name="sales-order-form" />
+		<view-param name="search-filters" value="sales-order-filters"/>
+		<domain>self.statusSelect = 1</domain>
+		<context name="_internalUser" expr="eval: __user__.id"/>
+		<context name="_myActiveTeam" expr="call:com.axelor.apps.base.service.user.UserInfoService:getUserActiveTeam()"/>
+	</action-view>	
+	
+	
+	<menuitem name="top-sales-orders" title="Orders" action="top.sales.orders" parent="top-sales" groups="admins,erp" top="true" left="false"/>		
+	
+	<action-view name="top.sales.orders" title="Orders"
+		model="com.axelor.apps.supplychain.db.SalesOrder" >
+		<view type="grid" name="sales-order-grid" />
+		<view type="form" name="sales-order-form" />
+		<view-param name="search-filters" value="sales-order-filters"/>
+		<context name="_internalUser" expr="eval: __user__.id"/>
+		<context name="_myActiveTeam" expr="call:com.axelor.apps.base.service.user.UserInfoService:getUserActiveTeam()"/>
+	</action-view>	
+	
+
+</object-views>

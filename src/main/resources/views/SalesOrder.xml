@@ -1,0 +1,235 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<object-views xmlns="http://apps.axelor.com/xml/ns/object-views"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://apps.axelor.com/xml/ns/object-views http://apps.axelor.com/xml/ns/object-views/object-views_0.9.xsd">
+    
+    <grid name="sales-order-grid" title="Sale orders" model="com.axelor.apps.supplychain.db.SalesOrder" orderBy="-creationDate">
+        <field name="salesOrderSeq"/>
+        <field name="company"/>
+        <field name="currency"/>
+        <field name="clientPartner"/>
+        <field name="clientReference"/>
+        <field name="creationDate"/>
+        <field name="inTaxTotal"/>
+        <field name="statusSelect"/>
+    </grid>
+    
+	<form name="sales-order-form" title="Sale order" model="com.axelor.apps.supplychain.db.SalesOrder" cols="4" 
+	onNew="action-sales-order-record-default,action-sales-order-record-company-configuration,action-sales-order-method-get-location,action-sales-order-record-currency,action-sales-order-attrs-collapse-specific-settings-group"
+	onSave="action-sales-order-set-sequence" onLoad="action-sales-order-attrs-collapse-specific-settings-group,action-sales-order-attrs-validated-read-only">
+	    <toolbar>
+<!-- 	        <button name="createDocument" title="Create Document" onClick="com.axelor.apps.supplychain.web.SalesOrderController:saveDocumentForOrder"/> -->
+            <button name="print" title="Print" onClick="save,action-sales-order-method-show-sales-order"/>
+	        <button name="sendByEmail" title="Send email" onClick="save,action-send-by-email-with-template"/>
+	    </toolbar>
+	    <group colSpan="4" cols="6">
+	        <field name="salesOrderSeq" css="highlight"/>
+	        <field name="affairProject" domain="self.isAffair = true"/>        
+	        <field name="company" widget="SuggestBox" onChange="action-sales-order-record-company-configuration,action-sales-order-method-get-location"/>
+	        <field name="externalReference"/>
+	        <field name="location" domain="self.company = :company and self.typeSelect = 1"/>
+	        <field name="currency"/>
+	    </group>
+	    <notebook colSpan="4">
+	        <page title="Customer information" colSpan="4" cols="6">
+	            <field name="clientPartner" form-view="partner-form" grid-view="partner-grid" onChange="action-sales-order-record-partner" domain="self.isContact = 'false'"/>
+	            <field name="mainInvoicingAddress"/>
+	            <field name="invoicingTypeSelect"/>
+	            <field name="contactPartner" domain="self.isContact = true" form-view="partner-contact-form" grid-view="partner-contact-grid"/>
+	            <field name="deliveryAddress"/>
+	            <field name="priceList" domain="self.typeSelect = 1 and (self.partner = null or self.partner = :clientPartner) and (self.validFromDate &lt;= :__date__ or self.validFromDate = null) and (self.validToDate &gt;= :__date__ or self.validToDate = null)"/>
+	            <group name="specificSettings" title="Specific settings" colSpan="6" cols="6" canCollapse="true">
+	                <separator title="Sale order Settings" colSpan="6"/>
+	                <field name="isToPrintLineSubTotal"/>
+	                <break/>
+	                <separator title="Sale order lines Settings" colSpan="6"/>
+	                <field name="hasGlobalTask"/>
+	                <field name="hasToCreateProposal"/>
+	            </group>
+	            <break/>
+	            <separator title="Sale order content" colSpan="6"/>
+	            <field name="salesOrderLineList" colSpan="6"/>
+	            <group showTitle="false" colSpan="6" cols="3">
+	                <group colSpan="2" cols="2">
+	                    <field name="salesOrderLineVatList" showTitle="false" colSpan="2"/>
+	                    <group title="Action(s)" colSpan="2" cols="2">
+	                        <group colSpan="1" cols="1">
+	                            <button name="compute" title="Compute" hideIf="statusSelect == 3" colSpan="1" onClick="save,action-sales-order-method-compute,save"/>
+	                            <button name="confirm" title="Confirm" showIf="statusSelect == 1 || statusSelect == 4" colSpan="1" onClick="save,action-sales-order-set-sequence,action-sales-order-method-compute,action-sales-order-record-confirm,save"/>
+	                            <button name="validate" title="Validate" showIf="statusSelect == 2" colSpan="1" onClick="save,action-sales-order-create-tasks,action-sale-order-validate-check-location,action-sales-order-create-stock-move,action-sales-order-record-validate,action-sales-order-attrs-validated-read-only,save"/>
+	                            <button name="cancel" title="Cancel" showIf="statusSelect == 1 || statusSelect == 2" colSpan="1" onClick="save,action-sales-order-record-cancel"/>
+	                            <button name="generateInvoice" title="Generate invoice" showIf="statusSelect == 3 &amp;&amp; invoicingTypeSelect != 4" colSpan="2" onClick="save,action-sales-order-method-generate-invoice"/>
+	                            <button name="generateProject" title="Generate project" showIf="statusSelect == 3" colSpan="2"/>
+	                        </group>
+	                        <group colSpan="1" cols="2">
+	                            <field name="creationDate" readonly="true"/>
+	                            <field name="validatedByUserInfo" colSpan="1" readonly="true"/>
+	                            <field name="validationDate" colSpan="1" readonly="true"/>
+	                            <field name="orderDate"/>
+	                            <field name="orderNumber"/>
+	                            <field name="shipmentDate"/>
+	                        </group>
+	                    </group>
+	                </group>
+	                <group title="Totaux" colSpan="1" cols="1">
+	                    <group readonly="true" colSpan="1" css="subtotal" cols="2" colWidths="30%,50%">
+	                        <field name="exTaxTotal"/>
+	                        <field name="vatTotal"/>
+	                        <field name="inTaxTotal" css="subtotal-total"/>
+	                        <field name="amountRemainingToBeInvoiced"/>
+	                    </group>
+	                    <group colSpan="1" cols="1">
+	                        <field name="statusSelect" widget="NavSelect"/>
+	                    </group>
+	                </group>
+	            </group>
+	        </page>
+	        <page title="Other informations">
+	            <group title="Sales follow-up" colSpan="2" cols="2">
+	                <field name="salesmanUserInfo"/>
+	                <field name="team" onSelect="action-sales-order-domain-on-team"/>
+	            </group>
+	            <group title="Financial terms" colSpan="2" cols="2">
+	                <field name="paymentMode"/>
+	                <field name="paymentCondition"/>
+	            </group>
+	            <group title="Marketing" colSpan="2">
+	                <field name="source"/>
+	            </group>
+	            <group title="Invoicing" colSpan="2">
+	                <field name="showDetailsInInvoice"/>
+	            </group>
+	        </page>
+	        <page title="Schedule" showIf="invoicingTypeSelect == 2">
+	            <field name="invoicingMomentSelect" colSpan="3"/>
+	            <field name="salesOrderScheduleLineList" colSpan="4"/>
+	        </page>
+	        <page title="Invoicing" showIf="statusSelect == 3">
+	            <button name="showInvoice" title="Show Invoices" showIf="statusSelect == 3" colSpan="4" onClick="action-sales-order-view-invoice"/>
+	            <field name="invoiceSet" colSpan="4"/>
+	        </page>
+	    </notebook>
+	</form>
+    
+    <action-attrs name="action-sales-order-domain-on-team">
+    	<attribute name="domain" for="team" expr="eval: salesmanUserInfo?.teamSet?.collect{it.id}?.size() > 0 ? &quot;self.id IN (${salesmanUserInfo?.teamSet?.collect{it.id}?.join(',')})&quot; : null"/>
+    </action-attrs>
+    
+    <action-attrs name="action-sales-order-attrs-validated-read-only">
+<!--     	<attribute name="readonly" for="salesOrderLineList" expr="true"/> -->
+    	<attribute name="readonly" for="salesOrderLineVatList" expr="statusSelect == 3"/>
+    	<attribute name="readonly" for="currency" expr="statusSelect == 3"/>
+    	<attribute name="readonly" for="location" expr="statusSelect == 3"/>
+    	<attribute name="readonly" for="company" expr="statusSelect == 3"/>
+    	<attribute name="readonly" for="clientPartner" expr="statusSelect == 3"/>
+    	<attribute name="readonly" for="invoicingTypeSelect" expr="statusSelect == 3"/>
+    	<attribute name="readonly" for="hasToCreateProposal" expr="statusSelect == 3"/>
+    	<attribute name="readonly" for="project" expr="statusSelect == 3"/>
+    	<attribute name="readonly" for="priceList" expr="statusSelect == 3"/>
+    </action-attrs>
+    
+    <action-method name="action-sales-order-method-show-sales-order">
+		<call class="com.axelor.apps.supplychain.web.SalesOrderController" method="showSalesOrder"/>
+	</action-method>
+    
+    <action-record name="action-sales-order-record-confirm" model="com.axelor.apps.supplychain.db.SalesOrder">
+    	<field name="statusSelect" expr="eval: 2"/>
+    </action-record>
+    
+    <action-record name="action-sales-order-record-validate" model="com.axelor.apps.supplychain.db.SalesOrder">
+    	<field name="statusSelect" expr="eval: 3"/>
+    	<field name="validationDate" expr="eval: __date__"/>
+    	<field name="validatedByUserInfo" expr="call:com.axelor.apps.base.service.user.UserInfoService:getUserInfo()"/>
+    </action-record>
+    
+     <action-record name="action-sales-order-record-cancel" model="com.axelor.apps.supplychain.db.SalesOrder">
+    	<field name="statusSelect" expr="eval: 4"/>
+    </action-record>
+    
+    <action-record name="action-sales-order-record-currency" model="com.axelor.apps.supplychain.db.SalesOrder">
+	    <field name="currency" expr="eval: company?.currency"/>
+	</action-record>
+    
+    <action-record name="action-sales-order-record-default" model="com.axelor.apps.supplychain.db.SalesOrder">
+    	<field name="creationDate" expr="eval: __date__"/>
+    	<field name="statusSelect" expr="eval: 1"/>
+    	<field name="company"  expr="call:com.axelor.apps.base.service.user.UserInfoService:getUserActiveCompany()"/>
+    	<field name="invoicingTypeSelect" expr="eval: 5"/>
+    	<field name="hasGlobalTask" expr="eval: true"/>
+    	<field name="salesmanUserInfo" expr="call:com.axelor.apps.base.service.user.UserInfoService:getUserInfo()"/>
+    	<field name="team" expr="call:com.axelor.apps.base.service.user.UserInfoService:getUserActiveTeam()"/>
+    </action-record>
+    
+    <action-record name="action-sales-order-record-company-configuration" model="com.axelor.apps.supplychain.db.SalesOrder">
+    	<field name="showDetailsInInvoice" expr="eval: company?.showDetailsInInvoice" if="company"/>
+    	<field name="invoicingTypeSelect" expr="eval: company?.salesOrderInvoicingTypeSelect" if="eval: company?.salesOrderInvoicingTypeSelect != 0"/>
+    </action-record>
+    
+    <action-record name="action-sales-order-record-partner" model="com.axelor.apps.supplychain.db.SalesOrder">
+    	<field name="paymentCondition" expr="eval: clientPartner?.paymentCondition"/>
+ 		<field name="currency" expr="eval: clientPartner?.currency"/>
+ 		<field name="paymentMode" expr="eval: clientPartner?.paymentMode"/>
+ 		<field name="mainInvoicingAddress" expr="eval: clientPartner?.mainInvoicingAddress"/>
+		<field name="deliveryAddress" expr="eval: clientPartner?.deliveryAddress"/>
+		<field name="priceList" expr="eval: com.axelor.apps.base.db.PriceList.all().filter('self.partner = ?1 AND self.isActive = true AND self.typeSelect = 1 AND (self.validFromDate &lt;= ?2 or self.validFromDate = null) AND (self.validToDate &gt;= ?2 or self.validToDate = null)',clientPartner, __date__).fetchOne()"/>
+    </action-record>
+    
+    <action-method name="action-sales-order-method-get-location">
+    	<call class="com.axelor.apps.supplychain.web.SalesOrderController" method="getLocation"/>
+    </action-method>
+    
+    <action-method name="action-sales-order-method-compute">
+    	<call class="com.axelor.apps.supplychain.web.SalesOrderController" method="compute"/>
+    </action-method>
+    
+    <action-method name="action-sales-order-method-generate-invoice">
+ 		<call class="com.axelor.apps.supplychain.web.SalesOrderInvoiceController" method="generateInvoice"/>
+	</action-method>
+	
+	<action-method name="action-sales-order-set-sequence">
+		<call class="com.axelor.apps.supplychain.web.SalesOrderController" method="setSequence"/>
+	</action-method>
+	
+	 <action-view name="action-sales-order-view-invoice" title="Invoices" model="com.axelor.apps.account.db.Invoice">
+		<view type="grid" name="invoice-grid"/>
+		<view type="form" name="invoice-form"/>
+		<domain>self.id IN :invoiceSet</domain>
+	</action-view>
+	
+	
+	<action-attrs name="action-sales-order-attrs-collapse-specific-settings-group">
+		<attribute name="collapse" for="specificSettings" expr="eval: true"/>
+	</action-attrs>
+    
+	<action-method name="action-sales-order-create-tasks">
+		<call class="com.axelor.apps.organisation.web.TaskController" method="createTasks"/>
+	</action-method>
+	
+	<action-method name="action-sales-order-create-stock-move">
+		<call class="com.axelor.apps.supplychain.web.SalesOrderController" method="createStockMoves"/>
+	</action-method>
+	
+	<action-validate name="action-sale-order-validate-check-location">
+		<error message="The location must be filled." if="location == null"/>
+	</action-validate> 
+	
+	<action-attrs name="action-sales-order-attrs-contact-partner-domain">
+        <attribute name="domain" expr="eval: &quot;self.isContact = true AND self.id IN (${(clientPartner?.contactPartnerSet != null &amp;&amp; !clientPartner.contactPartnerSet.empty)?clientPartner.contactPartnerSet.collect{it.id}.join(','):'null,null'})&quot;"  for="contactPartner"/>
+    </action-attrs>
+	
+	<search-filters name="sales-order-filters" model="com.axelor.apps.supplychain.db.SalesOrder" title="Sales Order filters">
+		<filter title="My Proposals">
+			<domain>(self.statusSelect = 1 or self.statusSelect = 2) and self.salesmanUserInfo.internalUser.id = :_internalUser</domain>
+		</filter>
+		<filter title="My Sales">
+			<domain>self.statusSelect = 3 and self.salesmanUserInfo.internalUser.id = :_internalUser</domain>
+		</filter>
+		<filter title="My Team Proposals">
+			<domain>(self.statusSelect = 1 or self.statusSelect = 2) and self.team = :_myActiveTeam</domain>
+		</filter>
+		<filter title="My Team Sales">
+			<domain>self.statusSelect = 3 and self.team = :_myActiveTeam</domain>
+		</filter>
+	</search-filters>
+	
+</object-views>
